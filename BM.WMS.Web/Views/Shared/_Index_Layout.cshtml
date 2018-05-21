@@ -1,0 +1,84 @@
+﻿@using System.Threading
+@using System.Web.Optimization
+@using Abp.Timing
+@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Web.Bundling
+@{
+    string themes = Session["themes"] == null ? "bluelight" : Session["themes"].ToString();
+    SetAntiForgeryCookie();
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewBag.Title</title>
+
+    @Styles.Render("~/Content/bootstrapmin")
+    @Styles.Render("~/Content/fontawesome")
+    @Styles.Render("~/Content/sweetalert")
+    @Styles.Render("~/Content/jstree")
+    @Styles.Render("~/Content/toastr")
+    @Styles.Render("~/Content/componentsmd")
+    @Styles.Render("~/Content/pluginsmd")
+    @Styles.Render("~/Content/layout4css")
+    @Styles.Render("~/Content/themeslight")
+    @Styles.Render("~/Content/site")
+    @Styles.Render("~/Content/easyui")
+
+    @Styles.Render("~/Content/themes/" + themes + "/css")
+
+    @Scripts.Render("~/bundles/json2")
+    @Scripts.Render("~/bundles/jquerymin")
+    @Scripts.Render("~/bundles/jqueryeasyui")
+    @Scripts.Render("~/bundles/easyuilang")
+    @Scripts.Render("~/bundles/easyui/easyuiplus")
+    @Scripts.Render("~/bundles/momentlocales")
+
+    @Scripts.Render("~/bundles/common")
+    @Scripts.Render("~/bundles/jqueryfrom")
+    @Scripts.Render("~/bundles/sweetalert")
+
+    @Scripts.Render("~/bundles/wdatepicker")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/jqueryvalidate")
+    @Scripts.Render("~/bundles/jqueryvalidatecustom")
+    @*@Scripts.Render("~/bundles/jqueryvalidateunobtrusive")
+    @Scripts.Render("~/bundles/jqueryvalidateunobtrusiveplus")*@
+    @Html.IncludeScript(ScriptPaths.JQuery_Validation_Localization)
+
+    @Scripts.Render("~/bundles/metronicapp")
+    @Scripts.Render("~/bundles/metroniclayout")
+    @Scripts.Render("~/bundles/metronicquick")
+    
+    <script src="~/Scripts/My97DatePicker/WdatePicker.js"></script>
+    <link href="~/Scripts/libs/jstree/themes/default/style.css" rel="stylesheet" />
+    <script src="~/Scripts/libs/jstree/jstree.js"></script>
+</head>
+<body>
+    <div style="padding:4px 5px 0px 5px;">
+        @RenderBody()
+    </div>
+    <div id="fullSetContent"></div>
+    <script type="text/javascript">
+        $(function () {
+            if (isExitsFunction(window.parent.fullSetButtonOut)) {
+                $("#fullSetContent").html(window.parent.fullSetButtonOut());
+                $("#fullSetButton").click(function () {
+                    if ($(this).attr("class") == "fa fa-expand") {
+                        $(this).removeClass("fa-expand").addClass("fa-compress");
+                    } else {
+                        $(this).removeClass("fa-compress").addClass("fa-expand");
+                    }
+                    window.parent.fullSet();
+                });
+            }
+        });
+
+    </script>
+    @Scripts.Render("~/Bundles/SystemInfo/libs/js")
+    <script src="~/api/AbpServiceProxies/GetAll"></script>
+    <script src="~/AbpScripts/GetScripts?v=@(Clock.Now.Ticks)"></script>
+    @Scripts.Render("~/bundles/underscore")
+    @Scripts.Render("~/Bundles/Common/js")
+    @Html.IncludeScript("~/Areas/SystemInfo/Views/Common/Modals/_LookupModal.js")
+</body>
+</html>

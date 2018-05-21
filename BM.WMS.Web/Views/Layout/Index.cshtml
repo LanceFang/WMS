@@ -1,0 +1,116 @@
+﻿@using System.Threading
+@using System.Web.Optimization
+@using Abp.Extensions
+@using Abp.Timing
+@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Localization
+@using BM.WMS.Web
+@using BM.WMS.Web.Bundling
+@model BM.WMS.Web.Models.Layout.HeaderViewModel
+@{
+    Layout = null;
+    string themes = Session["themes"] == null ? "bluelight" : Session["themes"].ToString();
+    SetAntiForgeryCookie();
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BM_WMS</title>
+    @Styles.Render("~/Content/easyui")
+    @Styles.Render("~/Content/themes/" + themes + "/css")
+    @Styles.Render("~/Content/site")
+    @Styles.Render("~/Content/fontawesome")
+
+    @Scripts.Render("~/bundles/json2")
+    @Scripts.Render("~/bundles/jquerymin")
+    @Scripts.Render("~/bundles/jqueryeasyui")
+    @Scripts.Render("~/bundles/easyui/easyuiplus")
+
+    @Scripts.Render("~/bundles/common")
+    @Scripts.Render("~/bundles/home")
+   
+
+    <script type="text/javascript">
+        if (window != top) {//在tab里显示的话就顶级目录跳转（缓存失效的情况下）
+            top.location.href = location.href;
+        }
+        @* This is used to get the application's root path from javascript.
+        It's useful if you're running application in a virtual directory under IIS. *@
+        var abp = abp || {}; abp.appPath = '@ApplicationPath';
+    </script>
+
+    <script type="text/javascript">
+        $(function () {
+            $("#RightAccordion").accordion({ //初始化accordion
+                fillSpace: true,
+                fit: true,
+                border: false,
+                animate: false
+            });
+            abp.ajax({
+                url: abp.appPath + "../../Layout/Sidebar",
+                success: function (obj) {
+                    //console.log(obj);
+                    loadAccordionMenu(obj);
+                }
+            })
+
+            $("#RightAccordion ").parent().css("overflow", "hidden");//外部隐藏
+        });
+    </script>
+</head>
+<body class="easyui-layout" id="easyLayout">
+
+    <div id="modalwindow" class="easyui-window" data-options="closed:true,minimizable:false,shadow:false,collapsible:true">
+    </div>
+
+    <div id="north" data-options="region:'north',border:false,split:false" style="height: 80px; padding:0;margin:0;overflow:hidden">
+        <table class="banner" style="border-spacing:0px;">
+            <tr>
+                <td class="webname">
+                    @*@Html.Partial("~/Views/Layout/_Header.cshtml")*@
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="west" data-options="region:'west',split:true,title:'@L("Navigation")',collapsible:true" style="width: 220px; height: 100%;  overflow: auto; border-bottom:0px;">
+        <div id="RightAccordion" class="easyui-accordion"></div>
+    </div>
+    <div id="center" data-options="region:'center',border:false">
+        <div id="mainTab" class="easyui-tabs" data-options="fit:true">
+        </div>
+    </div>
+    <div id="tab_menu" class="easyui-menu" style="width: 150px;">
+        <div id="tab_menu-tabrefresh" data-options="iconCls:'icon-reload'">
+            刷新
+        </div>
+        <div id="tab_menu-openFrame">
+            在新的窗体打开
+        </div>
+        <div id="tab_menu-tabcloseall">
+            关闭所有
+        </div>
+        <div id="tab_menu-tabcloseother">
+            关闭其他标签页
+        </div>
+        <div class="menu-sep">
+        </div>
+        <div id="tab_menu-tabcloseright">
+            关闭右边
+        </div>
+        <div id="tab_menu-tabcloseleft">
+            关闭左边
+        </div>
+        <div id="tab_menu-tabclose" data-options="iconCls:'fa fa-trash'">
+            关闭
+        </div>
+        <div id="menu" class="easyui-menu" style="width: 150px;">
+        </div>
+    </div>
+
+    @Scripts.Render("~/Bundles/SystemInfo/libs/js")
+    <script src="~/api/AbpServiceProxies/GetAll"></script>
+    <script src="~/AbpScripts/GetScripts?v=@(Clock.Now.Ticks)" type="text/javascript"></script>
+    @Scripts.Render("~/Bundles/Common/js")
+</body>
+</html>

@@ -1,0 +1,127 @@
+﻿@using Abp.Application.Services.Dto
+@using BM.WMS.MultiTenancy
+@using BM.WMS.Web.Areas.SystemInfo.Models.Common.Modals
+@model BM.WMS.Web.Areas.SystemInfo.Models.Tenants.CreateTenantViewModel
+
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("CreateNewTenant")))
+<div class="modal-body">
+    <form name="TenantInformationsForm" id="TenantInformationsForm">
+        <div class="form-group form-md-line-input form-md-floating-label">
+            <input class="form-control" type="text" name="TenancyName" required maxlength="@Tenant.MaxTenancyNameLength" regex="@Tenant.TenancyNameRegex" />
+            <label>@L("TenancyName")</label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label no-hint">
+            <input type="text" name="Name" class="form-control" required maxlength="@Tenant.MaxNameLength" />
+            <label>@L("Name")</label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label">
+            <input type="email" name="AdminEmailAddress" class="form-control" required maxlength="@BM.WMS.Authorization.Users.User.MaxEmailAddressLength" />
+            <label>@L("EmailAddress")</label>
+        </div>
+
+        <div class="md-checkbox-list">
+            <div class="md-checkbox">
+                <input id="CreateTenant_SetRandomPassword" class="md-check" type="checkbox" name="SetRandomPassword" value="true" />
+                <label for="CreateTenant_SetRandomPassword">
+                    <span class="inc"></span>
+                    <span class="check"></span>
+                    <span class="box"></span>
+                    @L("SetRandomPassword")
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label no-hint">
+            <input id="CreateTenant_AdminPassword" type="password" name="AdminPassword" class="form-control" maxlength="@BM.WMS.Authorization.Users.User.MaxPlainPasswordLength" minlength="@BM.WMS.Authorization.Users.User.MinPlainPasswordLength" />
+            <label>@L("Password")</label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label">
+            <input type="password" name="AdminPasswordRepeat" class="form-control" maxlength="@BM.WMS.Authorization.Users.User.MaxPlainPasswordLength" minlength="@BM.WMS.Authorization.Users.User.MinPlainPasswordLength" equalto="#CreateTenant_AdminPassword" />
+            <label>@L("PasswordRepeat")</label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label no-hint">
+            @Html.DropDownList("EditionId", Model.EditionItems.Select(i => i.ToSelectListItem()), new { @class = "form-control edited" })
+            <label for="EditionId">@L("Edition")</label>
+        </div>
+
+        <div class="md-checkbox-list">
+            <div class="md-checkbox">
+                <input id="CreateTenant_ShouldChangePasswordOnNextLogin" class="md-check" type="checkbox" name="ShouldChangePasswordOnNextLogin" value="true" />
+                <label for="CreateTenant_ShouldChangePasswordOnNextLogin">
+                    <span class="inc"></span>
+                    <span class="check"></span>
+                    <span class="box"></span>
+                    @L("ShouldChangePasswordOnNextLogin")
+                </label>
+            </div>
+            <div class="md-checkbox">
+                <input id="CreateTenant_SendActivationEmail" class="md-check" type="checkbox" name="SendActivationEmail" value="true">
+                <label for="CreateTenant_SendActivationEmail">
+                    <span class="inc"></span>
+                    <span class="check"></span>
+                    <span class="box"></span>
+                    @L("SendActivationEmail")
+                </label>
+            </div>
+            <div class="md-checkbox">
+                <input id="CreateTenant_IsActive" class="md-check" type="checkbox" name="IsActive" value="true" checked="checked">
+                <label for="CreateTenant_IsActive">
+                    <span class="inc"></span>
+                    <span class="check"></span>
+                    <span class="box"></span>
+                    @L("Active")
+                </label>
+            </div>
+        </div>
+    </form>
+</div>
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+
+<script type="text/javascript">
+    //$(function () {
+    //    var passwordInputs = $(".form-group").find('input[name=AdminPassword],input[name=AdminPasswordRepeat]');
+    //    var passwordInputGroups = passwordInputs.closest('.form-group');
+    //    $('#CreateTenant_SetRandomPassword').change(function () {
+    //        if ($(this).is(':checked')) {
+    //            passwordInputGroups.slideUp('fast');
+    //            passwordInputs.removeAttr('required');
+    //        } else {
+    //            passwordInputGroups.slideDown('fast');
+    //            passwordInputs.attr('required', 'required');
+    //        }
+    //    });
+
+    //    //$('#CreateTenant_UseHostDb').change(function () {
+    //    //    if ($(this).is(':checked')) {
+    //    //        connStringInputGroup.slideUp('fast');
+    //    //        connStringInput.removeAttr('required');
+    //    //    } else {
+    //    //        connStringInputGroup.slideDown('fast');
+    //    //        connStringInput.attr('required', 'required');
+    //    //    }
+    //    //});
+
+    //    $("#btnSave").click(function () {
+    //        $("#btnSave").buttonBusy(true);
+    //        if ($("#TenantInformationsForm").valid()) {
+    //            var tentan = $("#TenantInformationsForm").serializeFormToObject();
+    //            //$("#UserInformationsForm").serializeArray().map(function (x) { user[x.name] = x.value; });
+    //            parent.abp.services.app.tenant.createTenant(tentan).done(function () {
+    //                parent.abp.dialog.close();
+    //                parent.abp.dialog.msthreesecond(parent.app.localize('SavedSuccessfully'));
+    //                parent.abp.grid.reloadList();
+    //                return;
+    //            });
+    //        }
+    //        $("#btnSave").buttonBusy(false);
+    //    });
+    //    $("#btnReturn").click(function () {
+    //        parent.abp.dialog.close();
+    //    });
+    //})
+
+</script>

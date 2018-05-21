@@ -1,0 +1,69 @@
+﻿@using Abp.Application.Services.Dto
+@using Abp.Extensions
+@using BM.WMS.Authorization.Roles
+@using BM.WMS.Web.Utils
+@using BM.WMS.Web.Areas.SystemInfo.Models.Common.Modals
+@model BM.WMS.Web.Areas.SystemInfo.Models.Languages.CreateOrEditLanguageModalViewModel
+
+@*<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/flags/famfamfam-flags.css" rel="stylesheet" />
+    <div style="padding:4px 5px 0px 5px;">
+        <div class="mvctool bgb">
+            @Html.ToolButton("btnSave", "fa fa-save", L("Save"), true)
+            @Html.ToolButton("btnReturn", "fa fa-reply", L("Cancel"), false)
+        </div>*@
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? (L("EditLanguage") + ": " + Model.Language.Name) : L("CreateNewLanguage")))
+<div class="modal-body">
+    <form name="LanguageInformationsForm" id="LanguageInformationsForm" role="form" novalidate class="form-validation">
+        @if (Model.IsEditMode)
+            {
+            <input type="hidden" name="Id" value="@Model.Language.Id" />
+            }
+
+        <div class="form-group">
+            <label for="LanguageNameEdit">@L("Language")</label>
+            @Html.DropDownList(
+                "Name",
+                Model.LanguageNames.Select(i => i.ToSelectListItem()),
+                new
+                {
+                    @class = "form-control selectpicker",
+                    data_live_search = "true",
+                    id = "LanguageNameEdit"
+                })
+        </div>
+        <div class="form-group">
+            <label for="LanguageIconEdit">@L("Flag")</label>
+            <select id="LanguageIconEdit" name="Icon" class="form-control bs-select" data-live-search="true">
+                @foreach (var flag in Model.Flags)
+                    {
+                    <option data-icon="@flag.Value" value="@flag.Value" @(flag.IsSelected ? "selected=\"selected\"" : "")><i class="@flag.Value">@flag.DisplayText</i></option>
+                    }
+            </select>
+        </div>
+    </form>
+</div>
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+
+@*</div>
+    <script type="text/javascript">
+        $(function () {
+            $("#btnSave").click(function () {
+                if ($("#LanguageInformationsForm").valid()) {
+                    var language = {};
+                    $("#LanguageInformationsForm").serializeArray().map(function (x) { language[x.name] = x.value; });
+                    parent.abp.services.app.language.createOrUpdateLanguage({
+                        language: language
+                    }).done(function (data) {
+                        parent.abp.dialog.close();
+                        parent.abp.dialog.msthreesecond(parent.app.localize('SavedSuccessfully'));
+                        parent.abp.grid.reloadList();
+                        return;
+                    });
+                }
+            });
+            $("#btnReturn").click(function () {
+                parent.abp.dialog.close();
+            });
+        })
+    </script>*@

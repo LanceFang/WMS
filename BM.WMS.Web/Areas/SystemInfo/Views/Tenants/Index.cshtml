@@ -1,0 +1,146 @@
+﻿@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Authorization
+@using BM.WMS.Web.App_Start.Navigation
+@using BM.WMS.Web.Utils
+@{
+    Layout = "~/Views/Shared/_Index_Layout.cshtml";
+    ViewBag.CurrentPageName = PageNames.App.Host.Tenants;
+}
+<form id="filterForm" class="horizontal-form">
+    <div class="mvctool">
+        <input id="txtQuery" type="text" class="searchText" />
+        @Html.ToolButton("btnQuery", "fa fa-search", L("Query"), "Query", true)
+        @if (IsGranted(AppPermissions.Pages_Tenants_Create))
+        {
+            @Html.ToolButton("btnCreate", "fa fa-plus", L("Create"), "Create", true)
+        }
+        @Html.ToolButton("btnDetails", "fa fa-list", L("Details"), "Details", false)
+    </div>
+</form>
+<div class="datagridui">
+    <table id="List"></table>
+</div>
+<div id="modalwindow" class="easyui-window" style="width:800px; height:400px;" data-options="modal:true,closed:true,minimizable:false,shadow:false"></div>
+@Html.Partial("~/Views/Shared/_Partial_AutoGrid.cshtml")
+
+<script type="text/javascript">
+    $(function () {
+        var _grid;
+        var _permissions = {
+            create: abp.auth.hasPermission('Pages.Tenants.Create'),
+            edit: abp.auth.hasPermission('Pages.Tenants.Edit'),
+            //changeFeatures: abp.auth.hasPermission('Pages.Tenants.ChangeFeatures'),
+            //impersonation: abp.auth.hasPermission('Pages.Tenants.Impersonation'),
+            'delete': abp.auth.hasPermission('Pages.Tenants.Delete')
+        };
+
+        var itemsColumns = [
+                {
+                    field: 'id', title: app.localize('Actions'), formatter: function (value, row, index) {
+                        var actionhtml = "";
+                        if (_permissions.edit) {
+                            actionhtml += '<button class="btnUpdate btn btn-default btn-xs" data-id="' + row.id + '" title="' + app.localize('Edit') + '"><i class="fa fa-edit"></i></button>';
+                        }
+                        if (_permissions.delete) {
+                            actionhtml += '<button class="btnDelete btn btn-default btn-xs" data-id="' + row.id + '" data-tenancyName="' + row.tenancyName + '" title="' + app.localize('Delete') + '"><i class="fa fa-trash-o"></i></button>';
+                        }
+                        return actionhtml;
+                    }
+                },
+                { field: "tenancyName", title: app.localize('TenancyCodeName'), sortable: true, width: '18%', align: 'center' },
+                { field: "name", title: app.localize('Name'), sortable: true, width: '20%', align: 'center' },
+                { field: "editionDisplayName", title: app.localize('Edition'), sortable: true, width: '18%', align: 'center' },
+                {
+                    field: "isActive", title: app.localize('Active'), sortable: true, width: '9%', formatter: function (value) {
+                        return abp.common.IsTrueOrFalse(value)
+                    }, align: 'center'
+                },
+                { field: "creationTime", title: app.localize('CreationTime'), sortable: true, width: '20%', formatter: function (value) { return moment(value).format('YYYY-MM-DD HH:mm:ss'); }, align: 'center' }
+        ];
+        var options = {
+            table: "#List",
+            columns: itemsColumns,
+            url: abp.appPath + "api/services/app/tenant/GetTenants",
+            sortName: "Id",
+            sortOrder: "desc",
+            height: SetGridHeightSub(45),
+            fitColumns: true
+        }
+
+        _grid = new abp.grid();
+        _grid.init(options);
+
+        $("#btnQuery").click(function () {
+            var queryStr = $("#txtQuery").val();
+            if (queryStr == null) {
+                queryStr = "%";
+            }
+            _grid.loadList({ filter: queryStr });
+        });
+
+        $('#filterForm').keydown(function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                var queryStr = $("#txtQuery").val();
+                _grid.loadList({ filter: queryStr });
+            }
+        })
+
+        $("#btnCreate").click(function () {
+            var _createModal = new app.ModalManager({
+                viewUrl: abp.appPath + 'SystemInfo/Tenants/CreateModal',
+                scriptUrl: abp.appPath + 'Areas/SystemInfo/Views/Tenants/_CreateModal.js',
+                modalClass: 'CreateTenantModal',
+                reloadList: _grid.reloadList
+            });
+            _createModal.open();
+            //var options = {
+            //    title: app.localize("CreateNewTenant"),
+            //    width: 500,
+            //    height: 700,
+            //    iconCls: 'fa fa-plus',
+            //    url: "Tenants/CreateModal"
+            //}
+            //abp.dialog.init(options);
+        });
+
+        $(".datagridui").on("click", ".btnUpdate", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            var _editModal = new app.ModalManager({
+                viewUrl: abp.appPath + 'SystemInfo/Tenants/EditModal',
+                scriptUrl: abp.appPath + 'Areas/SystemInfo/Views/Tenants/_EditModal.js',
+                modalClass: 'EditTenantModal',
+                reloadList: _grid.reloadList
+            });
+            _editModal.open({ id: id });
+            //var options = {
+            //    title: app.localize("EditTenant"),
+            //    width: 600,
+            //    height: 455,
+            //    iconCls: 'fa fa-pencil',
+            //    url: 'Tenants/EditModal?id=' + id
+            //}
+            //abp.dialog.init(options);
+        })
+
+        $(".datagridui").on("click", ".btnDelete", function () {
+            var self = $(this);
+            var id = parseInt(self.attr("data-id"));
+            var tenancyName = self.attr("data-tenancyName");
+            abp.message.confirm(
+               app.localize('TenantDeleteWarningMessage', tenancyName),
+               function (isConfirmed) {
+                   if (isConfirmed) {
+                       var parma = { id: id };
+                       abp.services.app.tenant.deleteTenant(parma).done(function () {
+                           _grid.reloadList();
+                           //$.msthreesecond(app.localize('SuccessfullyDeleted'));
+                           abp.notify.success(app.localize('SuccessfullyDeleted'));
+                       });
+                   }
+               }
+           );
+        })
+    })
+</script>

@@ -1,0 +1,196 @@
+﻿@using Abp.Web.Mvc.Extensions
+@model BM.WMS.Auditing.AuditLogAndUser
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title">
+                <span ng-if="!vm.user.id">@L("AuditLogDetail")</span>
+            </h4>
+        </div>
+        <div class="modal-body">
+            <form class="form-horizontal audit-log-detail-view" role="form">
+                <div class="form-body">
+                    <h3 class="form-section">@L("UserInformations")</h3>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">@L("UserName"):</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static">
+                                        <span id="AuditLogDetailModal_UserName"></span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">@L("IpAddress"):</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static">
+                                        <span id="AuditLogDetailModal_ClientIpAddress"></span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">@L("Client"):</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static">
+                                        <span id="AuditLogDetailModal_ClientName"></span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">@L("Browser"):</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static">
+                                        <span id="AuditLogDetailModal_BrowserInfo"></span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div id="AuditLogDetailModal_ImpersonatorInfo" class="form-group">
+                                <label class="control-label col-sm-3"></label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static text-warning">
+                                        @L("AuditLogImpersonatedOperationInfo")
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="form-section">@L("ActionInformations")</h3>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">@L("Service"):</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static">
+                                        <span id="AuditLogDetailModal_ServiceName"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">@L("Action"):</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static">
+                                        <span id="AuditLogDetailModal_MethodName"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">@L("Time"):</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static">
+                                        <span id="AuditLogDetailModal_ExecutionTime"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">@L("Duration"):</label>
+                                <div class="col-sm-9">
+                                    <p class="form-control-static">
+                                        <span id="AuditLogDetailModal_Duration"></span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">@L("Parameters"):</label>
+                                <div class="col-sm-9">
+                                    <pre lang="js" id="AuditLogDetailModal_Parameters"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="form-section">@L("CustomData")</h3>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <p class="form-control-static" id="AuditLogDetailModal_CustomData_None">
+                                        @L("None")
+                                    </p>
+                                    <pre id="AuditLogDetailModal_CustomData"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="form-section">@L("ErrorState")</h3>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <p id="AuditLogDetailModal_Success" class="form-control-static">
+                                        <i class="fa fa-check-circle font-green"></i> @L("Success")
+                                    </p>
+                                    <pre id="AuditLogDetailModal_Exception">@Model.AuditLog.Exception</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">@L("Close")</button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        function getFormattedParameters(parameters) {
+            try {
+                var json = JSON.parse(parameters);
+                return JSON.stringify(json, null, 4);
+            } catch (e) {
+                return parameters;
+            }
+        }
+
+
+        $('#AuditLogDetailModal_UserName').html('@Model.User.UserName');
+        $('#AuditLogDetailModal_ClientIpAddress').html('@Model.AuditLog.ClientIpAddress');
+        $('#AuditLogDetailModal_ClientName').html('@Model.AuditLog.ClientName');
+        $('#AuditLogDetailModal_BrowserInfo').html('@Model.AuditLog.BrowserInfo');
+        $('#AuditLogDetailModal_ServiceName').html('@Model.AuditLog.ServiceName');
+        $('#AuditLogDetailModal_MethodName').html('@Model.AuditLog.MethodName');
+        $('#AuditLogDetailModal_ExecutionTime').html(moment('@Model.AuditLog.ExecutionTime').fromNow() + ' (' + moment('@Model.AuditLog.ExecutionTime').format('YYYY-MM-DD hh:mm:ss') + ')');
+        $('#AuditLogDetailModal_Duration').html(app.localize('Xms', '@Model.AuditLog.ExecutionDuration'));
+        $('#AuditLogDetailModal_Parameters').html(getFormattedParameters('@Model.AuditLog.Parameters'));
+
+        if ('@Model.AuditLog.ImpersonatorUserId') {
+
+            $('#AuditLogDetailModal_ImpersonatorInfo').show();
+        } else {
+            $('#AuditLogDetailModal_ImpersonatorInfo').hide();
+        }
+
+        @{
+            var flag = 0;
+            if ( @Model.AuditLog.Exception!=null)
+            {
+                flag = 1;
+            }
+        }
+        if (@flag > 0) {
+            $('#AuditLogDetailModal_Success').hide();
+            $('#AuditLogDetailModal_Exception').show();
+        } else {
+            $('#AuditLogDetailModal_Exception').hide();
+            $('#AuditLogDetailModal_Success').show();
+        }
+
+        if ('@Model.AuditLog.CustomData') {
+            $('#AuditLogDetailModal_CustomData_None').hide();
+            $('#AuditLogDetailModal_CustomData').show();
+            $('#AuditLogDetailModal_CustomData').html('@Model.AuditLog.CustomData');
+        } else {
+            $('#AuditLogDetailModal_CustomData').hide();
+            $('#AuditLogDetailModal_CustomData_None').show();
+        }
+    })
+
+</script>

@@ -1,0 +1,253 @@
+﻿@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Authorization
+@using BM.WMS.Web.App_Start.Navigation
+@using BM.WMS.Web.Utils
+@{
+    Layout = "~/Views/Shared/_Index_Layout.cshtml";
+    ViewBag.CurrentPageName = PageNames.App.Common.Users;
+}
+<script src="~/Scripts/libs/jquery-cookie/jquery.cookie.min.js"></script>
+<script src="~/Areas/SystemInfo/Views/Common/_PermissionTree.js"></script>
+<form id="filterForm" class="horizontal-form">
+    <div class="mvctool">
+        <input name="Filter" type="text" placeholder='@L("UserName"),@L("Surname"),@L("Name"),@L("EmailAddress")' class="searchText" />
+        @Html.ToolButton("btnQuery", "fa fa-search", L("Query"), "Query", true)
+        @if (IsGranted(AppPermissions.Pages_Administration_Users_Create))
+        {
+            @Html.ToolButton("btnCreate", "fa fa-plus", L("Create"), "Create", true)
+        }
+        @Html.ToolButton("btnRefresh", "fa fa-refresh", L("Refresh"), "Refresh", true)
+        @Html.ToolButton("btnExport", "fa fa-file-excel-o", L("ExportToExcel"), "Refresh", false)
+    </div>
+</form>
+<div class="datagridui">
+    <table id="List"></table>
+</div>
+<div id="modalwindow" class="easyui-window" style="width:800px; height:400px;" data-options="modal:true,closed:true,minimizable:false,shadow:false"></div>
+@Html.Partial("~/Views/Shared/_Partial_AutoGrid.cshtml")
+<script type="text/javascript">
+    $(function () {
+        var _grid;
+        var _permissions = {
+            create: abp.auth.hasPermission('Pages.Administration.Users.Create'),
+            edit: abp.auth.hasPermission('Pages.Administration.Users.Edit'),
+            changePermissions: abp.auth.hasPermission('Pages.Administration.Users.ChangePermissions'),
+            //impersonation: abp.auth.hasPermission('Pages.Administration.Users.Impersonation'),
+            'delete': abp.auth.hasPermission('Pages.Administration.Users.Delete')
+        };
+
+        var itemsColumns = [
+                {
+                    field: 'id', title: app.localize('Actions'), width: '15%', align: 'center', formatter: function (value, row, index) {
+                        var actionhtml = "";
+                        //if (_permissions.impersonation && row.id != abp.session.userId) {
+                        //    actionhtml += '<button class="btnLoginAs btn btn-default btn-xs" data-id="' + row.id + '" title="' + app.localize('LoginAsThisUser') + '"><i class="fa fa-sign-in"></i></button>';
+                        //}
+                        if (_permissions.edit) {
+                            actionhtml += '<button class="btnUpdate btn btn-default btn-xs" data-id="' + row.id + '" title="' + app.localize('Edit') + '"><i class="fa fa-edit"></i></button>';
+                        }
+                        if (_permissions.changePermissions) {
+                            actionhtml += '<button class="btnChangepermission btn btn-default btn-xs" data-id="' + row.id + '" title="' + app.localize('Permissions') + '"><i class="fa fa-list"></i></button>';
+                        }
+                        actionhtml += '<button class="btnUnlock btn btn-default btn-xs" data-id="' + row.id + '" title="' + app.localize('Unlock') + '"><i class="fa fa-unlock"></i></button>';
+                        if (_permissions.delete) {
+                            actionhtml += '<button class="btnDelete btn btn-default btn-xs" data-id="' + row.id + '" data-userName="' + row.userName + '" title="' + app.localize('Delete') + '"><i class="fa fa-trash-o"></i></button>';
+                        }
+                        return actionhtml;
+                    }
+                },
+               { field: "userName", title: app.localize('UserName'), sortable: true, width: '9%', align: 'center' },
+               { field: "surname", title: app.localize('Surname'), sortable: true, width: '10%', align: 'center' },
+               { field: "name", title: app.localize('Name'), sortable: true, width: '10%', align: 'center' },
+               {
+                   field: "roles", title: app.localize('Roles'), sortable: false, width: '12%', align: 'center',
+                   formatter: function (value) {
+                       var roleNames = '';
+                       for (var j = 0; j < value.length; j++) {
+                           if (roleNames.length) {
+                               roleNames = roleNames + ', ';
+                           }
+                           roleNames = roleNames + value[j].roleName;
+                       };
+                       return roleNames;
+                   }
+               },
+                { field: "phoneNumber", title: app.localize('PhoneNumber'), sortable: true, width: '15%', align: 'center' },
+               
+               { field: "emailAddress", title: app.localize('EmailAddress'), sortable: true, width: '15%', align: 'center' },
+               //{
+               //    field: "isEmailConfirmed", title: app.localize('EmailConfirm'), sortable: true, width: '10%', align: 'center', formatter: function (value) {
+               //        return abp.common.IsTrueOrFalse(value);
+               //    }
+               //},
+               {
+                   field: "isActive", title: app.localize('Active'), sortable: true, width: '6%', align: 'center', formatter: function (value) {
+                       return abp.common.IsTrueOrFalse(value);
+                   }
+               },
+               {
+                   field: "lastLoginTime", title: app.localize('LastLoginTime'), sortable: true, width: '10%', align: 'center', formatter: function (value) {
+                       if (value) {
+                           return moment(value).format('YYYY-MM-DD HH:mm:ss');
+                       }
+                       else {
+                           return "";
+                       }
+                   }
+               },
+               { field: "creationTime", title: app.localize('CreationTime'), sortable: true, width: '10%', formatter: function (value) { return moment(value).format('YYYY-MM-DD HH:mm:ss'); }, align: 'center' }
+        ];
+        
+        var options = {
+            table: "#List",
+            columns: itemsColumns,
+            url: abp.appPath + 'api/services/app/user/GetUsers',
+            sortName: "Name",
+            sortOrder: "desc",
+            height: SetGridHeightSub(45),//设置datagird表格的高度（自适应高度）
+            //singleSelect: true,//单选模式
+            fitColumns: true,
+            pagination: true
+        }
+        _grid = new abp.grid();
+        _grid.init(options);
+
+        var _createOrEditModal = new app.ModalManager({
+            viewUrl: abp.appPath + 'SystemInfo/Users/CreateOrEditModal',
+            scriptUrl: abp.appPath + 'Areas/SystemInfo/Views/Users/_CreateOrEditModal.js',
+            modalClass: 'CreateOrEditUserModal',
+            reloadList: _grid.reloadList
+        });
+
+        var _userPermissionsModal = new app.ModalManager({
+            viewUrl: abp.appPath + 'SystemInfo/Users/PermissionsModal',
+            scriptUrl: abp.appPath + 'Areas/SystemInfo/Views/Users/_PermissionsModal.js',
+            modalClass: 'UserPermissionsModal'
+        });
+
+        function createRequestParams() {
+            var prms = {};
+            $('#filterForm').serializeArray().map(function (x) { prms[x.name] = x.value; });
+            //console.log(prms);
+            return prms;
+        }
+
+        $("#btnQuery").click(function (e) {
+            e.preventDefault();
+            _grid.loadList(createRequestParams());
+        });
+
+        $('#filterForm').keydown(function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                _grid.loadList(createRequestParams());
+            }
+        })
+
+        $("#btnCreate").click(function (e) {
+            e.preventDefault();
+            //var options = {
+            //    title: app.localize("CreateNewUser"),
+            //    width: 600,
+            //    height: 770,
+            //    iconCls: 'fa fa-pencil',
+            //    url: 'Users/CreateOrEditModal'
+            //}
+            //abp.dialog.init(options);
+            _createOrEditModal.open();
+        });
+
+        $("#btnRefresh").click(function (e) {
+            e.preventDefault();
+            _grid.reloadList();
+        })
+
+        $('#btnExport').click(function () {
+            abp.services.app.user
+                .getUsersToExcel({})
+                .done(function (result) {
+                    app.downloadTempFile(result);
+                });
+        });
+
+        //$(".datagridui").on("click", ".btnLoginAs", function () {//这个功能不太成熟  -_-
+        //    var self = $(this);
+        //    var id = self.attr("data-id");
+        //    app.utils.removeCookie(abp.security.antiForgery.tokenCookieName);
+        //    abp.ajax({
+        //        url: abp.appPath + 'Account/Impersonate',
+        //        data: JSON.stringify({
+        //            tenantId: abp.session.tenantId,
+        //            userId: id
+        //        })
+        //    });
+        //})
+
+        $(".datagridui").on("click", ".btnUpdate", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            //var options = {
+            //    title: app.localize("EditUser"),
+            //    width: 600,
+            //    height: 770,
+            //    iconCls: 'fa fa-pencil',
+            //    url: 'Users/CreateOrEditModal?id=' + id
+            //}
+            //abp.dialog.init(options);
+            _createOrEditModal.open({ id: id });
+        })
+
+        $(".datagridui").on("click", ".btnChangepermission", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            //var options = {
+            //    title: app.localize("ChangingPermissions"),
+            //    width: 600,
+            //    height: 770,
+            //    iconCls: 'fa fa-pencil',
+            //    url: 'Users/PermissionsModal?id=' + id
+            //}
+            //abp.dialog.init(options);
+            _userPermissionsModal.open({ id: id });
+        })
+
+
+        $(".datagridui").on("click", ".btnUnlock", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            var userName = self.attr("data-userName");
+            //$.messager.confirm(app.localize('Tip'),
+            abp.message.confirm(
+                app.localize('UnlockedTheUser', userName),
+                function (isConfirmed) {
+                    if (isConfirmed) {
+                        var parma = { id: id };
+                        abp.services.app.user.unlockUser(parma).done(function () {
+                            _grid.reloadList();
+                            //$.msthreesecond(app.localize('UnlockedTheUser', userName));
+                            abp.notify.success(app.localize('UnlockedTheUser', userName));
+                        });
+                    }
+                }
+          );
+        })
+
+        $(".datagridui").on("click", ".btnDelete", function () {
+            var self = $(this);
+            var id = parseInt(self.attr("data-id"));
+            var userName = self.attr("data-userName");
+            abp.message.confirm(
+               app.localize('UserDeleteWarningMessage', userName),
+               function (isConfirmed) {
+                   if (isConfirmed) {
+                       var parma = { id: id };
+                       abp.services.app.user.deleteUser(parma).done(function () {
+                           _grid.reloadList();
+                           abp.notify.success(app.localize('SuccessfullyDeleted'));
+                       });
+                   }
+               }
+           );
+        })
+    })
+</script>

@@ -1,0 +1,62 @@
+﻿@using BM.WMS.Web.Areas.SystemInfo.Models.Common.Modals
+@using BM.WMS.Web.Utils
+@model BM.WMS.Web.Areas.SystemInfo.Models.Users.UserPermissionsEditViewModel
+
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("Permissions") + " - " + Model.User.UserName))
+
+<div class="modal-body">
+    @Html.Partial("~/Areas/SystemInfo/Views/Common/_PermissionTree.cshtml", Model)
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-default pull-left reset-permissions-button" data-toggle="tooltip" title="@L("ResetPermissionsTooltip")" data-placement="top"><span>@L("ResetSpecialPermissions")</span></button>
+    <button type="button" class="btn default close-button" data-dismiss="modal">@L("Cancel")</button>
+    <button type="button" class="btn blue save-button"><i class="fa fa-save"></i> <span>@L("Save")</span></button>
+</div>
+<div>
+
+    @*<div style="padding:4px 5px 0px 5px;">
+            <div class="mvctool bgb">
+                @Html.ToolButton("btnSave", "fa fa-save", L("Save"), true)
+                @Html.ToolButton("btnResetUserPermissions", "fa fa-trash", L("Reset"), L("ResetPermissionsTooltip"), true)
+                @Html.ToolButton("btnReturn", "fa fa-reply", L("Cancel"), false)
+            </div>
+            <div class="modal-body" style="overflow-y:scroll;height:680px;">
+                @Html.Partial("~/Areas/SystemInfo/Views/Common/_PermissionTree.cshtml", Model)
+            </div>
+        </div>
+        <script type="text/javascript">
+            $(function () {
+                var permissionsTree = new PermissionsTree();
+                permissionsTree.init($(".modal-body").find('.permission-tree'));
+                var id = '@Model.User.Id';
+                $("#btnSave").click(function () {
+                    parent.abp.services.app.user.updateUserPermissions({
+                        id: id,
+                        grantedPermissionNames: permissionsTree.getSelectedPermissionNames()
+                    }).done(function () {
+                        parent.abp.dialog.close();
+                        parent.abp.dialog.msthreesecond(parent.app.localize('SavedSuccessfully'));
+                        parent.abp.grid.reloadList();
+                        return;
+                    })
+                })
+
+                $("#btnResetUserPermissions").click(function () {
+                    console.log(id);
+                    parent.abp.services.app.user.resetUserSpecificPermissions({
+                        id: id
+                    }).done(function () {
+                        parent.abp.dialog.msthreesecond(parent.app.localize('ResetSuccessfully'));
+                    })
+                })
+
+                $("#btnReturn").click(function () {
+                    parent.abp.dialog.close();
+                });
+            })
+
+        </script>*@
+
+
+</div>

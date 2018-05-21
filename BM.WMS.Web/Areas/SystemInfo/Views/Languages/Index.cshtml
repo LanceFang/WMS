@@ -1,0 +1,147 @@
+﻿@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Authorization
+@using BM.WMS.Web.App_Start.Navigation
+@using BM.WMS.Web.Utils
+@{
+    ViewBag.CurrentPageName = PageNames.App.Common.Languages;
+    Layout = "~/Views/Shared/_Index_Layout.cshtml";
+}
+<link href="~/Scripts/fancybox/jquery.fancybox-1.3.4.css" rel="stylesheet" />
+<link href="~/Content/flags/famfamfam-flags.css" rel="stylesheet" />
+<script src="~/Scripts/fancybox/jquery.fancybox.min.js"></script>
+<div class="mvctool">
+    <div class="l-btn-left" style="font-size:20px;">
+        <h3>
+            <span>@L("Languages")</span> <small>@L("LanguagesHeaderInfo")</small>
+        </h3>
+    </div>
+</div>
+<div class="datagridui">
+    <table id="List"></table>
+</div>
+<div id="modalwindow" class="easyui-window" style="width:800px; height:400px;" data-options="modal:true,closed:true,minimizable:false,shadow:false"></div>
+@Html.Partial("~/Views/Shared/_Partial_AutoGrid.cshtml")
+<script type="text/javascript">
+    $(function () {
+        var _grid;
+        var _languageService = abp.services.app.language;
+        var _$languagesTable = $('#LanguagesTable');
+        var _defaultLanguageName = null;
+        var language = language || '@ViewBag.defaultLanguage';
+        console.log('@ViewBag.defaultLanguage');
+        var _permissions = {
+            create: abp.auth.hasPermission('Pages.Administration.Languages.Create'),
+            edit: abp.auth.hasPermission('Pages.Administration.Languages.Edit'),
+            changeTexts: abp.auth.hasPermission('Pages.Administration.Languages.ChangeTexts'),
+            'delete': abp.auth.hasPermission('Pages.Administration.Languages.Delete')
+        };
+
+        var itemsColumns = [
+            {
+                field: 'id', title: app.localize('Action'), width: '25%', align: 'left',
+                formatter: function (value, row, index) {
+                    var $span = '<span>';
+                    if (_permissions.edit && row.tenantId == abp.session.tenantId) {
+                        $span += '<button class="btnUpdate btn btn-default btn-xs" data-id="' + row.id + '" title="' + app.localize('Edit') + '"><i class="fa fa-edit" ></i></button>';
+                    }
+
+                    if (_permissions.changeTexts) {
+                        $span += '<a href="' + abp.appPath + "SystemInfo/Languages/Texts?languageName=" + row.name + '" class="btn btn-default btn-xs" title="' + app.localize('ChangeTexts') + '"><i class="fa fa-bars"></i></a>';
+                    }
+
+                    if (_permissions.edit) {
+                        $span += '<button class="btnSetDefault btn btn-default btn-xs" title="' + app.localize('SetAsDefaultLanguage') + '" data-name="' + row.name + '"><i class="fa fa-check"></i></button>';
+                    }
+
+                    if (_permissions.delete && row.tenantId == abp.session.tenantId) {
+                        $span += '<button class="btnDelete btn btn-default btn-xs" title="' + app.localize('Delete') + '" data-id="' + row.id + '" data-displayName="' + row.displayName + '" ><i class="fa fa-trash-o"></i></button>';
+                    }
+                    $span += "</span>";
+                    //console.log($span);
+                    return $span;
+                }
+            },
+            {
+                field: "displayName", title: app.localize('Name'), sortable: true, width: '25%', align: 'left', formatter: function (value, row, index) {
+                    var a = '<span><i class="' + row.icon + '"></i> &nbsp;<span data-language-name="' + row.name + '">' + row.displayName + '</span></span>';
+                    if (row.name == language) {
+                        a += "<lable style='font-weight: bold;' >（" + app.localize('Default') + "）</lable>"
+                    }
+                    return a;
+                }
+            },
+            { field: "name", title: app.localize('Code'), sortable: true, width: '25%', align: 'center' },
+            { field: "creationTime", title: app.localize('CreationTime'), sortable: true, width: '25%', formatter: function (value) { return moment(value).format('YYYY-MM-DD HH:mm:ss'); }, align: 'center' },
+        ];
+        var options = {
+            table: "#List",
+            columns: itemsColumns,
+            url: abp.appPath + "api/services/app/language/GetLanguages",
+            height: SetGridHeightSub(45),
+            //singleSelect: true,//单选模式
+            fitColumns: true,
+            pagination: false
+        }
+        _grid = new abp.grid();
+        _grid.init(options);
+
+        var _createOrEditModal = new app.ModalManager({
+            viewUrl: abp.appPath + 'SystemInfo/Languages/CreateOrEditModal',
+            scriptUrl: abp.appPath + 'Areas/SystemInfo/Views/Languages/_CreateOrEditModal.js',
+            modalClass: 'CreateOrEditLanguageModal',
+            reloadList: _grid.reloadList
+        });
+
+        $(".datagridui").on("click", ".btnUpdate", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            //var options = {
+            //    title: app.localize("EditLanguage"),
+            //    width: 600,
+            //    height: 400,
+            //    iconCls: 'fa fa-pencil',
+            //    url: 'Languages/CreateOrEditModal?id=' + id
+            //}
+            //console.log(options);
+            //abp.dialog.init(options);
+            _createOrEditModal.open();
+        })
+
+        $(".datagridui").on("click", ".btnSetDefault", function () {
+            var self = $(this);
+            var name = self.attr("data-name");
+            _languageService.setDefaultLanguage({
+                name: name
+            }).done(function () {
+                language = name;
+                _grid.reloadList();
+                abp.notify.success(app.localize('SuccessfullySaved'));
+                //$.msthreesecond(app.localize('SuccessfullySaved'));
+            });
+        })
+
+        $(".datagridui").on("click", ".btnDelete", function () {
+            var self = $(this);
+            var id = parseInt(self.attr("data-id"));
+            var displayName = self.attr("data-displayName");
+            console.log(id);
+            abp.message.confirm(
+               app.localize('LanguageDeleteWarningMessage', displayName),
+               function (isConfirmed) {
+                   if (isConfirmed) {
+                       var parma = { id: id };
+                       _languageService.deleteLanguage(parma).done(function () {
+                           _grid.reloadList();
+                           abp.notify.success(app.localize('SuccessfullyDeleted'));
+                           //$.msthreesecond(app.localize('SuccessfullyDeleted'));
+                       });
+                   }
+               }
+           );
+        })
+
+    })
+
+
+
+</script>

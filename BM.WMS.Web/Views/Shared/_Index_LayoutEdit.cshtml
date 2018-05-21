@@ -1,0 +1,44 @@
+﻿@using System.Web.Optimization
+@using Abp.Timing
+@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Web.Bundling
+@{
+    string themes = Session["themes"] == null ? "bluelight" : Session["themes"].ToString();
+    string info = System.Threading.Thread.CurrentThread.CurrentCulture.Name;
+    SetAntiForgeryCookie();
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+
+    <script src="@Url.Content("~/Scripts/libs/jquery/jquery.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/libs/jquery-easyui-1.5.1/jquery.easyui.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/libs/jquery-easyui-1.5.1/locale/easyui-lang-" + info + ".js")"></script>
+    <link href="@Url.Content("~/Content/themes/base/easyui.css")" rel="stylesheet" />
+    @Styles.Render("~/Content/themes/" + themes + "/css")
+    @Styles.Render("~/Content/site")
+    @Scripts.Render("~/bundles/easyui/easyuiplus")
+    @Scripts.Render("~/bundles/easyui/datagridfilter")
+    @Scripts.Render("~/bundles/common")
+    @Scripts.Render("~/bundles/jqueryfrom")
+    <script src="@Url.Content("~/Scripts/libs/jquery-validation/js/jquery.validate.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/libs/jquery-validation/js/jquery-validation-custom.js")" type="text/javascript"></script>
+    @Html.IncludeScript(ScriptPaths.JQuery_Validation_Localization)
+    <script src="@Url.Content("~/Scripts/libs/jquery-validation/js/jquery.validate.unobtrusive.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/libs/jquery-validation/js/jquery.validate.unobtrusive.plus.js")" type="text/javascript"></script>
+    <script src="~/Scripts/My97DatePicker/WdatePicker.js"></script>
+    <link href="~/Scripts/libs/jstree/themes/default/style.css" rel="stylesheet" />
+    <link href="~/Content/fontawesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    @RenderBody()
+
+    @Scripts.Render("~/Bundles/SystemInfo/libs/js")
+    @*<script src="~/api/AbpServiceProxies/GetAll"></script>
+        <script src="~/AbpScripts/GetScripts?v=@(Clock.Now.Ticks)" type="text/javascript"></script>*@
+    @Scripts.Render("~/Bundles/Common/js")
+</body>
+</html>

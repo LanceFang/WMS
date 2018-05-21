@@ -1,0 +1,128 @@
+﻿@using Abp.Extensions
+@using BM.WMS.Authorization
+@using BM.WMS.Web.App_Start.Navigation
+@using BM.WMS.Web.Utils
+@{
+    ViewBag.CurrentPageName = PageNames.App.Common.MaterielsClasses;
+    Layout = "~/Views/Shared/_Index_Layout.cshtml";
+}
+<form id="filterForm" class="horizontal-form">
+    <div class="mvctool">
+        <input name="filterText" type="text" placeholder='@L("ClassCode"),@L("ClassName")' class="searchText" />
+        @Html.ToolButton("btnQuery", "fa fa-search", L("Query"), "Query", true)
+        @if (IsGranted(AppPermissions.MaterielsClasses_CreateMaterielsClasses))
+        {
+            @Html.ToolButton("btnCreate", "fa fa-plus", L("CreateMaterielsClasses"), "Create", true)
+        }
+        @Html.ToolButton("btnRefresh", "fa fa-refresh", L("Refresh"), "Refresh", true)
+        @Html.ToolButton("btnExport", "fa fa-file-excel-o", L("ExportToExcel"), "Refresh", false)
+    </div>
+</form>
+<div class="datagridui">
+    <table id="List"></table>
+</div>
+<div id="modalwindow" class="easyui-window" style="width:800px; height:400px;" data-options="modal:true,closed:true,minimizable:false,shadow:false"></div>
+@Html.Partial("~/Views/Shared/_Partial_AutoGrid.cshtml")
+<script type="text/javascript">
+    $(function () {
+        var _$materielsClassessTable = $('#MaterielsClassessTable');
+        var _materielsClassesService = abp.services.app.materielsClasses;
+
+        var _permissions = {
+            create: abp.auth.hasPermission("Pages.MaterielsClasses.CreateMaterielsClasses"),
+            edit: abp.auth.hasPermission("Pages.MaterielsClasses.EditMaterielsClasses"),
+            'delete': abp.auth.hasPermission("Pages.MaterielsClasses.DeleteMaterielsClasses")
+        };
+
+        var itemsColumns = [
+               {
+                   field: 'id', title: app.localize('Actions'), formatter: function (value, row, index) {
+                       var actionhtml = "";
+                       if (_permissions.edit) {
+                           actionhtml += '<button class="btnUpdate btn btn-default btn-xs" data-id="' + row.id + '" title="' + app.localize('Edit') + '"><i class="fa fa-edit"></i></button>';
+                       }
+                       if (_permissions.delete) {
+                           actionhtml += '<button class="btnDelete btn btn-default btn-xs" data-id="' + row.id + '" data-className="' + row.className + '" title="' + app.localize('Delete') + '"><i class="fa fa-trash-o"></i></button>';
+                       }
+                       return actionhtml;
+                   }
+               },
+               { field: "classCode", title: app.localize('ClassCode'), sortable: true, width: '18%', align: 'center' },
+               { field: "className", title: app.localize('ClassName'), sortable: true, width: '20%', align: 'center' },
+               { field: "remark", title: app.localize('Remark'), sortable: true, width: '18%', align: 'center' },
+               {
+                   field: "isEnable", title: app.localize('IsEnable'), sortable: true, width: '9%', formatter: function (value) {
+                       return abp.common.IsTrueOrFalse(value)
+                   }, align: 'center'
+               },
+               { field: "creationTime", title: app.localize('CreationTime'), sortable: true, width: '20%', formatter: function (value) { return moment(value).format('YYYY-MM-DD HH:mm:ss'); }, align: 'center' }
+        ];
+        var options = {
+            table: "#List",
+            columns: itemsColumns,
+            url: abp.appPath + "api/services/app/materielsClasses/GetPagedMaterielsClassessAsync",
+            sortName: "classCode",
+            sortOrder: "desc",
+            height: SetGridHeightSub(45),
+            fitColumns: true
+        }
+
+        _grid = new abp.grid();
+        _grid.init(options);
+
+        var _createOrEditModal = new app.ModalManager({
+            viewUrl: abp.appPath + 'BaseData/MaterielsClassesManage/CreateOrEditMaterielsClassesModal',
+            scriptUrl: abp.appPath + 'Areas/BaseData/Views/MaterielsClassesManage/_CreateOrEditMaterielsClassesModal.js',
+            modalClass: 'CreateOrEditMaterielsClassesModal',
+            reloadList: _grid.reloadList
+        });
+
+        $("#btnQuery").click(function () {
+            var param = $("#filterForm").serializeFormToObject();
+            console.log(param);
+            _grid.loadList(param);
+        });
+
+        $('#filterForm').keydown(function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                _grid.loadList($("#filterForm").serializeFormToObject());
+            }
+        })
+
+        $("#btnCreate").click(function () {
+            _createOrEditModal.open();
+        });
+
+        $(".datagridui").on("click", ".btnUpdate", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            _createOrEditModal.open({ id: id });
+        })
+
+        $(".datagridui").on("click", ".btnDelete", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            var className = self.attr("data-className");
+            abp.message.confirm(
+                app.localize('MaterielsClassesDeleteWarningMessage', className),
+                    function (isConfirmed) {
+                        if (isConfirmed) {
+                            _materielsClassesService.deleteMaterielsClassesAsync({
+                                id: id
+                            }).done(function () {
+                                _grid.reloadList();
+                                abp.notify.success(app.localize('SuccessfullyDeleted'));
+                            });
+                        }
+                    }
+                );
+        })
+    })
+</script>
+
+
+
+
+
+

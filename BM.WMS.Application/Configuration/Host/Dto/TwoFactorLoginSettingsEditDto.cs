@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BM.WMS.Configuration.Host.Dto
+{
+    public class TwoFactorLoginSettingsEditDto
+    {
+        public bool IsEnabledForApplication { get; set; }
+
+        public bool IsEnabled { get; set; }
+
+        public bool IsEmailProviderEnabled { get; set; }
+
+        public bool IsSmsProviderEnabled { get; set; }
+
+        public bool IsRememberBrowserEnabled { get; set; }
+    }
+}

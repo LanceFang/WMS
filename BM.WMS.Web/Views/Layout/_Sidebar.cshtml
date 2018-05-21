@@ -1,0 +1,38 @@
+﻿@using Abp.Collections.Extensions
+@using BM.WMS.Web.Views
+@model BM.WMS.Web.Models.Layout.SidebarViewModel
+@{
+    var calculateMenuUrl = new Func<string, string>((url) =>
+    {
+        if (string.IsNullOrEmpty(url))
+        {
+            return ApplicationPath;
+        }
+
+        if (UrlChecker.IsRooted(url))
+        {
+            return url;
+        }
+
+        return ApplicationPath + url;
+    });
+}
+<div class="easyui-accordion" id="RightAccordion" data-options="fit:true,border:false">
+    @for (var i = 0; i < Model.Menu.Items.Count; i++)
+    {
+        var menuItem = Model.Menu.Items[i];
+        var isActive = Model.CurrentPageName == menuItem.Name || (!menuItem.Items.IsNullOrEmpty() && menuItem.Items.Any(item => item.Name == Model.CurrentPageName));
+        <div title="@menuItem.DisplayName" style="overflow:auto;">
+            <ul>
+                @foreach (var childMenuItem in menuItem.Items)
+                {
+                    <li>
+                        <div>
+                            <a class="nva-a" href="javascript:void(0);" src="@calculateMenuUrl(childMenuItem.Url)"><span class="icon @menuItem.Icon">@childMenuItem.DisplayName</span></a>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>

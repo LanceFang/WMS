@@ -1,0 +1,124 @@
+﻿@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Authorization
+@using BM.WMS.Web.Utils
+@{
+    ViewBag.CurrentPageName = AppPermissions.StoreInfo;
+    Layout = "~/Views/Shared/_Index_Layout.cshtml";
+}
+<form id="filterForm" class="horizontal-form">
+    <div class="mvctool">
+        <input name="filterText" type="text" placeholder='@L("StoreCode"),@L("StoreName")' class="searchText" />
+        @Html.ToolButton("btnQuery", "fa fa-search", L("Query"), "Query", true)
+        @if (IsGranted(AppPermissions.Materiels_CreateMateriels))
+        {
+            @Html.ToolButton("btnCreate", "fa fa-plus", L("CreateStoreInfo"), "Create", true)
+        }
+        @Html.ToolButton("btnRefresh", "fa fa-refresh", L("Refresh"), "Refresh", false)
+    </div>
+</form>
+<div class="datagridui">
+    <table id="List"></table>
+</div>
+@Html.Partial("~/Views/Shared/_Partial_AutoGrid.cshtml")
+<script type="text/javascript">
+    $(function () {
+        var _$storeInfosTable = $('#StoreInfosTable');
+        var _storeInfoService = abp.services.app.storeInfo;
+
+        var _permissions = {
+            create: abp.auth.hasPermission("Pages.StoreInfo.CreateStoreInfo"),
+            edit: abp.auth.hasPermission("Pages.StoreInfo.EditStoreInfo"),
+            'delete': abp.auth.hasPermission("Pages.StoreInfo.DeleteStoreInfo")
+
+        };
+
+        var itemsColumns = [
+        {
+            field: 'id', title: app.localize('Actions'), width: '10%', formatter: function (value, row, index) {
+                var actionhtml = "";
+                if (_permissions.edit) {
+                    actionhtml += '<button class="btnUpdate btn btn-default btn-xs" data-id="' + row.id + '" title="' + app.localize('Edit') + '"><i class="fa fa-edit"></i></button>';
+                }
+                if (_permissions.delete) {
+                    actionhtml += '<button class="btnDelete btn btn-default btn-xs" data-id="' + row.id + '" data-storeName="' + row.storeName + '" title="' + app.localize('Delete') + '"><i class="fa fa-trash-o"></i></button>';
+                }
+                return actionhtml;
+            }
+        },
+       { field: "storeCode", title: app.localize('StoreCode'), sortable: true, width: '20%', align: 'center' },
+       { field: "storeName", title: app.localize('StoreName'), sortable: true, width: '20%', align: 'center' },
+       { field: "userName", title: app.localize('StoreManageName'), sortable: true, width: '20%', align: 'center' },
+       { field: "remark", title: app.localize('Remark'), sortable: true, width: '20%', align: 'center' },
+       { field: "creationTime", title: app.localize('CreationTime'), sortable: true, width: '10%', formatter: function (value) { return moment(value).format('YYYY-MM-DD HH:mm:ss'); }, align: 'center' }
+        ];
+        var options = {
+            table: "#List",
+            columns: itemsColumns,
+            url: abp.appPath + "api/services/app/storeInfo/GetPagedStoreInfosAsync",
+            sortName: "storeName",
+            sortOrder: "desc",
+            height: SetGridHeightSub(45),
+            fitColumns: true
+        }
+
+        _grid = new abp.grid();
+        _grid.init(options);
+
+        var _createOrEditModal = new app.ModalManager({
+            viewUrl: abp.appPath + 'BaseData/StoreInfoManage/CreateOrEditStoreInfoModal',
+            scriptUrl: abp.appPath + 'Areas/BaseData/Views/StoreInfoManage/_CreateOrEditStoreInfoModal.js',
+            modalClass: 'CreateOrEditStoreInfoModal',
+            reloadList: _grid.reloadList
+        });
+
+        $("#btnQuery").click(function () {
+            var param = $("#filterForm").serializeFormToObject();
+            console.log(param);
+            _grid.loadList(param);
+        });
+
+        $('#filterForm').keydown(function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                _grid.loadList($("#filterForm").serializeFormToObject());
+            }
+        })
+
+        $("#btnCreate").click(function () {
+            _createOrEditModal.open();
+        });
+
+        $("#btnRefresh").click(function () {
+            _grid.reloadList();
+        })
+
+        $(".datagridui").on("click", ".btnUpdate", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            _createOrEditModal.open({ id: id });
+        })
+
+        $(".datagridui").on("click", ".btnDelete", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            var storeName = self.attr("data-storeName");
+            abp.message.confirm(
+                app.localize('StoreInfoDeleteWarningMessage', storeName),
+                    function (isConfirmed) {
+                        if (isConfirmed) {
+                            _materielsService.deleteMaterielsAsync({
+                                id: id
+                            }).done(function () {
+                                _grid.reloadList();
+                                abp.notify.success(app.localize('SuccessfullyDeleted'));
+                            });
+                        }
+                    }
+                );
+        })
+
+    })
+
+</script>
+
+

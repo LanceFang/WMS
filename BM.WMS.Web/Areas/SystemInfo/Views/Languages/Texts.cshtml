@@ -1,0 +1,134 @@
+﻿@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Web.App_Start.Navigation
+@model BM.WMS.Web.Areas.SystemInfo.Models.Languages.LanguageTextsViewModel
+@{
+    ViewBag.CurrentPageName = PageNames.App.Common.Languages;
+    Layout = "~/Views/Shared/_Index_Layout.cshtml";
+}
+<div class="inputs inputs-full-width">
+    <form id="TextsFilterForm">
+        <div class="row">
+            <div class="col-sm-6 col-md-3">
+                <div class="form-group">
+                    <label for="TextBaseLanguageSelectionCombobox">@L("BaseLanguage")</label>
+                    <select id="TextBaseLanguageSelectionCombobox"
+                            class="form-control bs-select"
+                            data-live-search="true">
+                        @foreach (var language in Model.Languages)
+                        {
+                        <option data-icon="@language.Icon" value="@language.Name" @(language.Name == Model.BaseLanguageName ? "selected=\"selected\"" : "")>
+                            <i class="@language.Icon"></i>@language.DisplayName
+                        </option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <div class="form-group">
+                    <label for="TextTargetLanguageSelectionCombobox">@L("TargetLanguage")</label>
+                    <select id="TextTargetLanguageSelectionCombobox"
+                            class="form-control bs-select"
+                            data-live-search="true">
+                        @foreach (var language in Model.Languages)
+                        {
+                        <option data-icon="@language.Icon" value="@language.Name" @(language.Name == Model.LanguageName ? "selected=\"selected\"" : "")>
+                            <i class="@language.Icon"></i>@language.DisplayName
+                        </option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <div class="form-group">
+                    <label for="TextSourceSelectionCombobox">@L("Source")</label>
+                    @Html.DropDownList(
+                                    "SourceName",
+                                    Model.Sources,
+                                    new
+                                    {
+                                        @class = "form-control selectpicker",
+                                        data_live_search = "true",
+                                        id = "TextSourceSelectionCombobox"
+                                    })
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <div class="form-group">
+                    <label for="TargetValueFilterSelectionCombobox">@L("TargetValue")</label>
+                    <select id="TargetValueFilterSelectionCombobox" class="form-control bs-select">
+                        <option value="ALL" @(Model.TargetValueFilter == "ALL" ? "selected=\"selected\"" : "")>@L("All")</option>
+                        <option value="EMPTY" @(Model.TargetValueFilter == "EMPTY" ? "selected=\"selected\"" : "")>@L("EmptyOnes")</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="input-group">
+            <input id="TextFilter" value="@Model.FilterText" class="form-control" placeholder="@L("SearchWithThreeDot")" type="text">
+            <span class="input-group-btn">
+                <button id="RefreshTextsButton" class="btn default" type="submit"><i class="icon-refresh"></i> @L("Refresh")</button>
+            </span>
+        </div>
+    </form>
+</div>
+<div class="datagridui" style="margin-top:5px;">
+    <table id="List"></table>
+</div>
+@Html.Partial("~/Views/Shared/_Partial_AutoGrid.cshtml")
+<script type="text/javascript">
+    $(function () {
+        var _grid;
+        var itemsColumns = [
+                {
+                    field: 'index', title: app.localize('Action'), width: '10%', align: 'left',
+                    formatter: function (value, row, index) {
+                        var $span = '<span>';
+                        $span += '<button class="btnUpdate btn btn-default btn-xs" data-key="' + row.key + '" title="' + app.localize('Edit') + '"><i class="fa fa-edit"></i></button>';
+                        $span += "</span>";
+                        return $span;
+                    }
+                },
+                { field: "key", title: app.localize('Key'), sortable: true, width: '25%', align: 'left' },
+                { field: "baseValue", title: app.localize('BaseValue'), sortable: true, width: '32%', align: 'center' },
+                { field: "targetValue", title: app.localize('TargetValue'), sortable: true, width: '30%', align: 'center' },
+        ];
+
+        var options = {
+            table: "#List",
+            columns: itemsColumns,
+            url: abp.appPath + 'api/services/app/language/GetLanguageTexts',
+            height: SetGridHeightSub(125),//这里注释的话分页栏就不会在最下方
+            //singleSelect: true,//单选模式
+            fitColumns: true,
+            sortName: "key",
+            sortOrder: "asc",
+            pageSize: 100
+        };
+        _grid = new abp.grid();
+        _grid.init(options,
+            {
+                targetLanguageName: $('#TextTargetLanguageSelectionCombobox').val(),
+                sourceName: $('#TextSourceSelectionCombobox').val(),
+                baseLanguageName: $('#TextBaseLanguageSelectionCombobox').val(),
+                targetValueFilter: $('#TargetValueFilterSelectionCombobox').val(),
+                filterText: $('#TextFilter').val()
+            });
+
+        var _editTextModal = new app.ModalManager({
+            viewUrl: abp.appPath + 'SystemInfo/Languages/EditTextModal',
+            scriptUrl: abp.appPath + 'Areas/SystemInfo/Views/Languages/_EditTextModal.js',
+            modalClass: 'EditLanguageTextModal',
+            reloadList: _grid.reloadList
+        });
+
+        $(".datagridui").on("click", ".btnUpdate", function () {
+            var self = $(this);
+            var key = self.attr("data-key");
+            _editTextModal.open({
+                key: key,
+                sourceName: $('#TextSourceSelectionCombobox').val(),
+                baseLanguageName: $('#TextBaseLanguageSelectionCombobox').val(),
+                languageName: $('#TextTargetLanguageSelectionCombobox').val()
+            })
+        })
+    })
+</script>

@@ -1,0 +1,146 @@
+﻿@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Authorization
+@using BM.WMS.Web.App_Start.Navigation
+@using BM.WMS.Web.Utils
+@{
+    Layout = "~/Views/Shared/_Index_Layout.cshtml";
+    ViewBag.CurrentPageName = PageNames.App.Common.Roles;
+}
+
+<script src="~/Areas/SystemInfo/Views/Common/_PermissionTree.js"></script>
+
+<form id="filterForm" class="horizontal-form">
+    <div class="mvctool">
+        <input name="RoleName" type="text" class="searchText" />
+        @Html.ToolButton("btnQuery", "fa fa-search", L("Query"), "Query", true)
+        @Html.ToolButton("btnRefresh", "fa fa-refresh", L("Refresh"), "Refresh", true)
+        @if (IsGranted(AppPermissions.Pages_Administration_Roles_Create))
+        {
+            @Html.ToolButton("btnCreate", "fa fa-plus", L("Create"), "Create", false)
+        }
+    </div>
+</form>
+<div class="datagridui">
+    <table id="List"></table>
+</div>
+@Html.Partial("~/Views/Shared/_Partial_AutoGrid.cshtml")
+
+<script type="text/javascript">
+    $(function () {
+        var _grid;
+        var _permissions = {
+            create: abp.auth.hasPermission('Pages.Administration.Roles.Create'),
+            edit: abp.auth.hasPermission('Pages.Administration.Roles.Edit'),
+            'delete': abp.auth.hasPermission('Pages.Administration.Roles.Delete')
+        };
+        var itemsColumns = [
+                {
+                    field: 'id', title: app.localize('Actions'), width: '30%', align: 'left', formatter: function (value, row, index) {
+                        var actionhtml = "";
+                        //console.log(row);
+                        if (_permissions.edit) {
+                            actionhtml += '<button class="btnUpdate btn btn-default btn-xs" data-id="' + row.id + '" title="' + app.localize('Edit') + '"><i class="fa fa-edit" ></i></button>';
+                        }
+                        if (!row.isStatic && _permissions.delete) {
+                            actionhtml += '<button class="btnDelete btn btn-default btn-xs" title="' + app.localize('Delete') + '" data-id="' + row.id + '" data-displayName="' + row.displayName + '" ><i class="fa fa-trash-o"></i></button>';
+                        }
+                        return actionhtml;
+                    }
+                },
+               { field: "displayName", title: app.localize('RoleName'), sortable: false, width: '35%', align: 'center' },
+               { field: "creationTime", title: app.localize('CreationTime'), sortable: false, width: '35%', formatter: function (value) { return moment(value).format('YYYY-MM-DD HH:mm:ss'); }, align: 'center' }
+        ];
+        var options = {
+            table: "#List",
+            columns: itemsColumns,
+            url: abp.appPath + 'api/services/app/role/GetRoles',
+            sortName: "Id",
+            sortOrder: "desc",
+            height: SetGridHeightSub(45),//这里注释的话分页栏就不会在最下方
+            //singleSelect: true,//单选模式
+            fitColumns: true,
+            pagination: false
+        }
+        _grid = new abp.grid();
+        _grid.init(options);
+
+        function createRequestParams() {
+            var prms = {};
+            $('#filterForm').serializeArray().map(function (x) { prms[x.name] = x.value; });
+            //console.log(prms);
+            return prms;
+        }
+
+        $("#btnQuery").click(function (e) {
+            e.preventDefault();
+            _grid.loadList(createRequestParams());
+        });
+        $("#btnRefresh").click(function (e) {
+            e.preventDefault();
+            //console.log(abp.grid);
+            _grid.reloadList();
+        })
+        $('#filterForm').keydown(function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                _grid.loadList(createRequestParams());
+            }
+        })
+
+        var _createOrEditModal = new app.ModalManager({
+            viewUrl: abp.appPath + 'SystemInfo/Roles/CreateOrEditModal',
+            scriptUrl: abp.appPath + 'Areas/SystemInfo/Views/Roles/_CreateOrEditModal.js',
+            modalClass: 'CreateOrEditRoleModal',
+            reloadList: _grid.reloadList
+        });
+
+        $("#btnCreate").click(function (e) {
+            e.preventDefault();
+            //var options = {
+            //    title: app.localize("CreateNewRole"),
+            //    width: 600,
+            //    height: 700,
+            //    iconCls: 'fa fa-pencil',
+            //    url: 'Roles/CreateOrEditModal'
+            //}
+            //abp.dialog.init(options);
+
+            _createOrEditModal.open();
+        });
+
+        $(".datagridui").on("click", ".btnUpdate", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            //var options = {
+            //    title: app.localize("EditRole"),
+            //    width: 600,
+            //    height: 700,
+            //    iconCls: 'fa fa-pencil',
+            //    url: 'Roles/CreateOrEditModal?id=' + id
+            //}
+            //abp.dialog.init(options);
+            _createOrEditModal.open({ id: id });
+        })
+
+        $(".datagridui").on("click", ".btnDelete", function () {
+            var self = $(this);
+            var id = parseInt(self.attr("data-id"));
+            var displayName = self.attr("data-displayName");
+            console.log(id);
+            abp.message.confirm(
+                 app.localize('RoleDeleteWarningMessage', displayName),
+                function (isConfirmed) {
+                    if (isConfirmed) {
+                        abp.services.app.role.deleteRole({
+                            id: id
+                        }).done(function () {
+                            _grid.reloadList();
+                            //$.msthreesecond(app.localize('SuccessfullyDeleted'));
+                            abp.notify.success(app.localize('SuccessfullyDeleted'));
+                        });
+                    }
+                }
+           );
+        })
+    })
+</script>

@@ -1,0 +1,73 @@
+﻿@using Abp.Extensions
+@using Abp.Application.Services.Dto
+@using BM.WMS.Web.Areas.SystemInfo.Models.Common.Modals
+@using BM.WMS.Web.Areas.BaseData.Models.MaterielsManage
+@model CreateOrEditMaterielsModalViewModel
+
+@* 初始化头部 *@
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? (L("EditMateriels") + ": " + Model.Materiels.MaterialName) : L("CreateMateriels")))
+<!--html代码区域-->
+
+<div class="modal-body">
+    <form name="materielsInformationsForm" role="form" novalidate class="form-validation">
+        <div hidden="hidden">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="Id" value="@Model.Materiels.Id" />
+            }
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label">
+            <div class="input-group">
+                <input type="text" class="form-control @(Model.Materiels.ClassName.IsNullOrEmpty() ? "" : " edited")" name="ClassName" readonly="readonly" value="@Model.Materiels.ClassName" required />
+                <input type="hidden" name="MaterialClassId" value="@Model.Materiels.MaterialClassId" />
+                <label>@L("ClassName")<span class="required"> * </span></label>
+                <span class="input-group-btn">
+                    <button class="btn btn-default" id="btnSelect" type="button"><i class="fa fa-check"></i>@L("Select")</button>
+                </span>
+            </div>
+        </div>
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.Materiels.ShortCode.IsNullOrEmpty() ? "" : " edited")" type="text" name="ShortCode" value="@Model.Materiels.ShortCode" />
+            <label>@L("ShortCode") </label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.Materiels.MaterialCode.IsNullOrEmpty() ? "" : " edited")" type="text" name="MaterialCode" value="@Model.Materiels.MaterialCode" required style="text-transform:uppercase;" regex="@BM.WMS.WMSConsts.MaterielsCodeRegex" />
+            <label>@L("MaterialCode")   <span class="required"> * </span></label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.Materiels.MaterialName.IsNullOrEmpty() ? "" : " edited")" type="text" name="MaterialName" value="@Model.Materiels.MaterialName" required />
+            <label>@L("MaterialName")   <span class="required"> * </span>	 	</label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.Materiels.FullName.IsNullOrEmpty() ? "" : " edited")" type="text" name="FullName" value="@Model.Materiels.FullName" />
+            <label>@L("FullName") </label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.Materiels.HelperCode.IsNullOrEmpty() ? "" : " edited")" type="text" name="HelperCode" value="@Model.Materiels.HelperCode" />
+            <label>@L("HelperCode") </label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.Materiels.Model.IsNullOrEmpty() ? "" : " edited")" type="text" name="Model" value="@Model.Materiels.Model" required />
+            <label>@L("Model")   <span class="required"> * </span>	 	</label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.Materiels.Unit.IsNullOrEmpty() ? "" : " edited")" type="text" name="Unit" value="@Model.Materiels.Unit" />
+            <label>@L("Unit") </label>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.Materiels.Remark.IsNullOrEmpty() ? "" : " edited")" type="text" name="Remark" value="@Model.Materiels.Remark" />
+            <label>@L("Remark") </label>
+        </div>
+
+    </form>
+</div>
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+

@@ -1,0 +1,54 @@
+﻿@using Abp.Application.Services.Dto
+@using BM.WMS.MultiTenancy
+@using BM.WMS.Web.Areas.SystemInfo.Models.Common.Modals
+@model BM.WMS.Web.Areas.SystemInfo.Models.Tenants.EditTenantViewModel
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("EditTenant") + ": " + Model.Tenant.TenancyName))
+<div class="modal-body">
+    <form name="TenantInformationsForm" id="TenantInformationsForm">
+        <input type="hidden" name="Id" value="@Model.Tenant.Id" />
+        <input type="hidden" name="TenancyName" value="@Model.Tenant.TenancyName" />
+        <div class="form-group form-md-line-input form-md-floating-label">
+            <label>@L("Name")</label>
+            <input type="text" name="Name" value="@Model.Tenant.Name" class="form-control edited" required maxlength="@Tenant.MaxNameLength">
+        </div>
+        <div class="form-group form-md-line-input form-md-floating-label no-hint">
+            <label for="EditionId">@L("Edition")</label>
+            @Html.DropDownList("EditionId", Model.EditionItems.Select(i => i.ToSelectListItem()), new { @class = "form-control edited" })
+        </div>
+        <div class="md-checkbox-list">
+            <div class="md-checkbox">
+                <input id="EditTenant_IsActive" class="md-check" type="checkbox" name="IsActive" value="true" @Html.Raw(Model.Tenant.IsActive ? "checked=\"checked\"" : "")>
+                <label for="EditTenant_IsActive">
+                    <span class="inc"></span>
+                    <span class="check"></span>
+                    <span class="box"></span>
+                    @L("Active")
+                </label>
+            </div>
+        </div>
+    </form>
+</div>
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+
+
+<script type="text/javascript">
+    $(function () {
+        $("#btnSave").click(function () {
+            $("#btnSave").buttonBusy(true);
+            if ($("#TenantInformationsForm").valid()) {
+                var tentan = $("#TenantInformationsForm").serializeFormToObject();
+                //$("#UserInformationsForm").serializeArray().map(function (x) { user[x.name] = x.value; });
+                parent.abp.services.app.tenant.updateTenant(tentan).done(function () {
+                    parent.abp.dialog.close();
+                    parent.abp.dialog.msthreesecond(parent.app.localize('SavedSuccessfully'));
+                    parent.abp.grid.reloadList();
+                    return;
+                });
+            }
+            $("#btnSave").buttonBusy(false);
+        });
+        $("#btnReturn").click(function () {
+            parent.abp.dialog.close();
+        });
+    })
+</script>

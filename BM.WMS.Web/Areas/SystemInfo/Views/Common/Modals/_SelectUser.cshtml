@@ -1,0 +1,18 @@
+﻿@using BM.WMS.Web.Utils
+@using BM.WMS.Web.Areas.SystemInfo.Models.Common.Modals
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("SelectUser")))
+<div class="modal-body">
+    <form id="filterForm" class="horizontal-form">
+        <div class="mvctool">
+            <input name="filterText" type="text" placeholder='@L("Name"),@L("UserName")' class="searchText" />
+            @Html.ToolButton("btnQuery", "fa fa-search", L("Query"), "Query", false)
+        </div>
+    </form>
+    <div class="datagridui">
+        <table id="UserList"></table>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn default close-button" data-dismiss="modal">@L("Cancel")</button>
+</div>

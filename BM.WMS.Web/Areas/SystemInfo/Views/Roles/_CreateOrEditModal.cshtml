@@ -1,0 +1,175 @@
+﻿@using Abp.Extensions
+@using BM.WMS.Authorization.Roles
+@using BM.WMS.Web.Areas.SystemInfo.Models.Common.Modals
+@model BM.WMS.Web.Areas.SystemInfo.Models.Roles.CreateOrEditRoleModalViewModel
+@*@{
+    Layout = "~/Views/Shared/_Index_LayoutEdit.cshtml";
+}*@
+
+
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? (L("EditRole") + ": " + Model.Role.DisplayName) : L("CreateNewRole")))
+
+<div class="modal-body">
+    <div class="tabbable-line">
+        <ul class="nav nav-tabs ">
+            <li class="active">
+                <a href="#RoleInformationsTab" data-toggle="tab" aria-expanded="true">
+                    @L("RoleProperties")
+                </a>
+            </li>
+            <li class="">
+                <a href="#PermissionsTab" data-toggle="tab" aria-expanded="false">
+                    @L("Permissions")
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="RoleInformationsTab">
+
+                <form name="RoleInformationsForm" role="form" novalidate class="form-validation">
+
+                    @if (Model.IsEditMode)
+                    {
+                        <input type="hidden" name="Id" value="@Model.Role.Id" />
+                    }
+
+                    <div class="form-group form-md-line-input form-md-floating-label">
+                        <input class="form-control@(Model.Role.DisplayName.IsNullOrEmpty() ? "" : " edited")" type="text" name="DisplayName" value="@Model.Role.DisplayName" required maxlength="@Role.MaxDisplayNameLength">
+                        <label>@L("RoleName")</label>
+                    </div>
+
+                    <div class="md-checkbox-list">
+                        <div class="md-checkbox">
+                            <input id="EditRole_IsDefault" class="md-check" type="checkbox" name="IsDefault" value="true" @Html.Raw(Model.Role.IsDefault ? "checked=\"checked\"" : "")>
+                            <label for="EditRole_IsDefault">
+                                <span class="inc"></span>
+                                <span class="check"></span>
+                                <span class="box"></span>
+                                @L("Default")
+                            </label>
+                            <span class="help-block">@L("DefaultRole_Description")</span>
+                        </div>
+                    </div>
+
+                </form>
+
+            </div>
+            <div class="tab-pane" id="PermissionsTab">
+                @Html.Partial("~/Areas/SystemInfo/Views/Common/_PermissionTree.cshtml", Model)
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+
+<div>
+    @*<div style="padding:4px 5px 0px 5px;">
+            <div class="mvctool bgb">
+                @Html.ToolButton("btnSave", "fa fa-save", L("Save"), true)
+                @Html.ToolButton("btnReturn", "fa fa-reply", L("Cancel"), false)
+            </div>
+            <div class="easyui-tabs" style="width: 100%; height: auto">
+                <div title="@L("RoleProperties")" style="padding:20px;">
+                    <div class="tab-pane active" id="RoleInformationsTab">
+                        <form name="RoleInformationsForm" id="RoleInformationsForm" role="form" novalidate class="form-validation">
+
+                            <input type="hidden" name="Id" id="Id" value="@ViewBag.RoleId" />
+
+                            <div class="form-group form-md-line-input form-md-floating-label">
+                                @(Model.Role.DisplayName.IsNullOrEmpty() ? "" : " edited")
+                                    @Model.Role.DisplayName
+                                <input class="form-control" type="text" name="DisplayName" placeholder="@L("RoleName")" id="DisplayName" value="" required maxlength="@Role.MaxDisplayNameLength">
+                            </div>
+
+                            <div class="md-checkbox-list">
+                                <div class="md-checkbox">
+                                    <label>
+                                        <input id="EditRole_IsDefault" class="md-check" type="checkbox" name="IsDefault" value="true">@Html.Raw(Model.Role.IsDefault ? "checked=\"checked\"" : "")
+                                        <span class="inc"></span>
+                                        <span class="check"></span>
+                                        <span class="box"></span>
+                                        @L("Default")
+                                    </label>
+                                    <span class="help-block">@L("DefaultRole_Description")</span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div title="@L("Permissions")" style="overflow:hidden;padding:20px;display:none;">
+                    <div style="display:block;overflow-y:scroll;height:45em;">
+                        <ul id="permissiontree" class="easyui-tree"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>*@
+
+    @*<script type="text/javascript">
+            $(function () {
+                var Id = '@ViewBag.RoleId';;
+                abp.ajax({
+                    url: 'GetFormData?Id=' + Id
+                }).done(function (obj) {
+                    //console.log(obj);
+                    $("#permissiontree").tree({//加载权限树
+                        data: obj.listTree,
+                        checkbox: true,
+                        cascadeCheck: false,//加载的时候取消父子关联
+                        onClick: function (node) {
+                            if (node.state == 'closed') {
+                                $(this).tree('expand', node.target);
+                            } else if (node.state == 'open') {
+                                $(this).tree('collapse', node.target);
+                            }
+                        }
+                        //,
+                        //onDblClick: function (node) {
+                        //    $("#permissiontree").tree({ cascadeCheck: $(node).is(':checked') });
+                        //}
+                    });
+                    //赋值给相应的文本框
+                    //console.log(obj.role);
+                    if (obj.role) {
+                        $("#Id").val(obj.role.id);
+                        $("#DisplayName").val(obj.role.displayName);
+                        $("#EditRole_IsDefault").attr("checked", obj.role.isDefault)
+                    }
+                });
+
+                function SelectedPermissionNames() {
+                    var selectedNodes = [];
+                    var checkeds = $('#permissiontree').tree('getChecked');
+                    var selected = $('#permissiontree').tree('getChecked', 'indeterminate');
+                    for (var i = 0; i < checkeds.length; i++) {
+                        selectedNodes.push(checkeds[i].attributes);
+                    }
+                    for (var i = 0; i < selected.length; i++) {
+                        selectedNodes.push(selected[i].attributes);
+                    }
+                    //console.log(selectedNodes);
+                    return selectedNodes;
+                }
+
+                $("#btnSave").click(function () {
+                    if ($("#RoleInformationsForm").valid()) {
+                        var role = $("#RoleInformationsForm").serializeFormToObject();
+                        //$("#RoleInformationsForm").serializeArray().map(function (x) { role[x.name] = x.value; });//与上面一行是等效的
+                        parent.abp.services.app.role.createOrUpdateRole({
+                            role: role,
+                            grantedPermissionNames: SelectedPermissionNames()
+                        }).done(function () {
+                            parent.abp.dialog.close();
+                            parent.abp.dialog.msthreesecond( parent.app.localize('SavedSuccessfully'));
+                            parent.abp.grid.reloadList();
+                            return;
+                        });
+                    }
+                });
+                $("#btnReturn").click(function () {
+                    parent.abp.dialog.close();
+                });
+            })
+
+        </script>*@
+</div>

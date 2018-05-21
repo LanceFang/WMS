@@ -1,0 +1,41 @@
+﻿@using Abp.Extensions
+@using BM.WMS.Web.Areas.SystemInfo.Models.Common.Modals
+@using BM.WMS.Web.Areas.BaseData.Models.MaterielsClassesManage
+@model CreateOrEditMaterielsClassesModalViewModel
+
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? (L("EditMaterielsClasses") + ": " + Model.MaterielsClasses.IsEnable) : L("CreateMaterielsClasses")))
+
+<div class="modal-body">
+    <form name="materielsClassesInformationsForm" role="form" novalidate class="form-validation">
+        <input type="hidden" name="Id" value="@Model.MaterielsClasses.Id" />
+        <div hidden="hidden">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="Id" value="@Model.MaterielsClasses.Id" />
+            }
+        </div>
+        <div class="form-group form-md-line-input form-md-floating-label no-hint">
+            <input name="ClassCode" auto-focus class="form-control @(Model.MaterielsClasses.ClassCode.IsNullOrEmpty() ? "" : "edited")" required value="@Model.MaterielsClasses.ClassCode" />
+            <label> @L("ClassCode") <span class="required"> * </span></label>
+        </div>
+        <div class="form-group form-md-line-input form-md-floating-label no-hint">
+            <input name="ClassName" auto-focus class="form-control @(Model.MaterielsClasses.ClassName.IsNullOrEmpty() ? "" : "edited")" required value="@Model.MaterielsClasses.ClassName" />
+            <label> @L("ClassName")   <span class="required"> * </span></label>
+        </div>
+        <div class="form-group form-md-line-input form-md-floating-label no-hint">
+            <input name="Remark" auto-focus class="form-control @(Model.MaterielsClasses.Remark.IsNullOrEmpty() ? "" : "edited")" value="@Model.MaterielsClasses.Remark" />
+            <label> @L("Remark")</label>
+        </div>
+        <div class="md-checkbox">
+            <input id="EditMaterielsClasses_IsEnable" class="md-check" type="checkbox" name="IsEnable" value="true" @Html.Raw(Model.MaterielsClasses.IsEnable ? "checked=\"checked\"" : "") />
+            <label for="EditMaterielsClasses_IsEnable">
+                <span class="inc"></span>
+                <span class="check"></span>
+                <span class="box"></span>
+                @L("IsEnable")
+            </label>
+        </div>
+    </form>
+</div>
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+

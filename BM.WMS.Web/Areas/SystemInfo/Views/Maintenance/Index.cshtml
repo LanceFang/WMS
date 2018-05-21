@@ -1,0 +1,169 @@
+﻿@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Web.App_Start.Navigation
+@{
+    ViewBag.CurrentPageName = PageNames.App.Host.Maintenance;
+}
+@{
+    Layout = "~/Views/Shared/_Index_Layout.cshtml";
+}
+<style type="text/css">
+    .web-log-view {
+        font-family: "Courier New";
+        overflow-x: scroll;
+        overflow-y: scroll;
+        height: 100%;
+        white-space: nowrap;
+    }
+
+        .web-log-view span.log-line {
+            margin-bottom: 5px;
+            display: block;
+        }
+
+            .web-log-view span.log-line span.label {
+                width: 50px;
+                display: inline-block;
+            }
+</style>
+<div class="easyui-tabs">
+    <div title="@L("Caches")" style="padding:20px;">
+        <div class="tab-pane active" id="CachesTab">
+            <div class="row margin-bottom-10">
+                <div class="col-xs-6">
+                    <p>@L("CachesHeaderInfo")</p>
+                </div>
+                <div class="col-xs-6 text-right">
+                    <button id="ClearAllCachesButton" class="btn blue"><i class="fa fa-refresh"></i> @L("ClearAll")</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <table class="datagrid-btable" style="width:100%; border:1px solid #e7ecf1;" cellspacing="0" cellpadding="0" border="0">
+                        <tbody>
+                            @foreach (var cache in Model.Caches)
+                            {
+                                <tr class="datagrid-row">
+                                    <td>
+                                        <span>@cache.Name</span>
+                                    </td>
+                                    <td style="text-align:center; align-content:center">
+                                        <button class="btn btn-xs blue pull-right btn-clear-cache" data-cache-name="@cache.Name">
+                                            @L("Clear")
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div title="@L("WebSiteLogs")" style="overflow:auto;padding:20px;display:none;">
+        <div class="row margin-bottom-10">
+            <div class="col-xs-6">
+                <p>@L("WebSiteLogsHeaderInfo")</p>
+            </div>
+            <div class="col-xs-6 text-right">
+                <button id="DownloadAllLogsbutton" class="btn blue"><i class="fa fa-download"></i> @L("DownloadAll")</button>
+                <button id="RefreshButton" class="btn blue"><i class="fa fa-refresh"></i> @L("Refresh")</button>
+            </div>
+        </div>
+        <div>
+            <div id="WebSiteLogsContent" class="web-log-view full-height"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    $(function () {
+        var _cachingService = abp.services.app.caching;
+        var _webLogService = abp.services.app.webLog;
+
+        //Caching
+        function clearCache(cacheName) {
+            _cachingService.clearCache({
+                id: cacheName
+            }).done(function () {
+                $.msthreesecond(app.localize('CacheSuccessfullyCleared'));
+            });
+        }
+
+        function clearAllCaches() {
+            _cachingService.clearAllCaches().done(function () {
+                $.msthreesecond(app.localize('AllCachesSuccessfullyCleared'));
+            });
+        }
+
+        $('.btn-clear-cache').click(function (e) {
+            e.preventDefault();
+            var cacheName = $(this).attr('data-cache-name');
+            clearCache(cacheName);
+        });
+
+        $('#ClearAllCachesButton').click(function (e) {
+            e.preventDefault();
+            clearAllCaches();
+        });
+
+        function getWebLogs() {
+            _webLogService.getLatestWebLogs({}).done(function (result) {
+                //console.log(result);
+                var logs = getFormattedLogs(result.latesWebLogLines);
+                //console.log(logs);
+                $('#WebSiteLogsContent').html(logs);
+                fixWebLogsPanelHeight();
+            });
+        }
+
+        function downloadWebLogs() {
+            _webLogService.downloadWebLogs({}).done(function (result) {
+                app.downloadTempFile(result);
+            });
+        };
+
+        function getFormattedLogs(logLines) {
+            var resultHtml = '';
+            $.each(logLines, function (index, logLine) {
+                //console.log(index);
+                resultHtml += '<span class="log-line">' + _.escape(logLine)
+                .replace('DEBUG', '<span class="label label-default">DEBUG</span>')
+                .replace('INFO', '<span class="label label-info">INFO</span>')
+                .replace('WARN', '<span class="label label-warning">WARN</span>')
+                .replace('ERROR', '<span class="label label-danger">ERROR</span>')
+                .replace('FATAL', '<span class="label label-danger">FATAL</span>') + '</span>';
+            });
+            return resultHtml;
+        }
+
+        function fixWebLogsPanelHeight() {//窗体变化大小
+            $('.full-height').css('height', SetGridHeightSub(130) + 'px');
+            $('.full-height').css('width', SetGridWidthSub(20) + 'px');
+            $('.panel-body').css('width', SetGridWidthSub(20) + 'px');
+            $('.tabs-panels').css('width', SetGridWidthSub(20) + 'px');
+            $('.tabs-wrap').css('width', SetGridWidthSub(20) + 'px');
+        }
+
+        $('#DownloadAllLogsbutton').click(function (e) {
+            e.preventDefault();
+            downloadWebLogs();
+        });
+
+        $('#RefreshButton').click(function (e) {
+            e.preventDefault();
+            getWebLogs();
+        });
+
+        $(window).resize(function () {
+            fixWebLogsPanelHeight();
+        });
+
+        getWebLogs();
+    })
+
+
+
+</script>
+
+

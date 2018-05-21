@@ -1,0 +1,121 @@
+﻿@using Abp.Web.Mvc.Extensions
+@using BM.WMS.Authorization
+@using BM.WMS.Web.App_Start.Navigation
+@using BM.WMS.Web.Utils
+@{
+    Layout = "~/Views/Shared/_Index_Layout.cshtml";
+    ViewBag.CurrentPageName = PageNames.App.Common.AuditLogs;
+}
+@*<link href="~/Scripts/fancybox/jquery.fancybox-1.3.4.css" rel="stylesheet" />
+<script src="~/Scripts/fancybox/jquery.fancybox.min.js"></script>*@
+<form id="filterForm" class="horizontal-form">
+    <div class="mvctool">
+        <input name="UserName" type="text" class="searchText" placeholder="@L("UserName")" />
+        <input name="ServiceName" type="text" class="searchText" placeholder="@L("Service")" />
+        <input name="MethodName" type="text" class="searchText" placeholder="@L("Action")" />
+        @Html.ToolButton("btnQuery", "fa fa-search", L("Query"), "Query", false)
+        <div class="rightdiv">
+            <button id="ExportAuditLogsToExcelButton" class="btn btn-default"><i class="fa fa-file-excel-o"></i> @L("ExportToExcel")</button>
+            <button id="RefreshAuditLogsButton" class="btn blue"><i class="fa fa-refresh"></i> @L("Refresh")</button>
+        </div>
+
+    </div>
+    <div class="datagridui">
+        <table id="List"></table>
+    </div>
+</form>
+<div id="modalwindow" class="easyui-window" style="width:800px; height:400px;" data-options="modal:true,closed:true,minimizable:false,shadow:false"></div>
+@Html.Partial("~/Views/Shared/_Partial_AutoGrid.cshtml")
+
+<script type="text/javascript">
+    $(function () {
+        var _grid;
+        var itemsColumns = [
+                {
+                    field: 'id', title: '', width: '5%', align: 'center',
+                    formatter: function (value, row, index) {
+                        var a = "<a href='javascript:void(0)' class='btnDetail'  data-id=" + row.id + "><span class='l-btn-text fa fa-search' style='font-size:14px'></span></a>"
+                        return a;
+                    }
+                },
+                {
+                    field: "exception", title: "", formatter: function (value) {
+                        if (!value) {
+                            return '<div class="text-center"><i class="fa fa-check-circle font-green"></i></div>';
+                        }
+                        else {
+                            return '<div class="text-center"><i class="fa fa-warning font-yellow-gold"></i></div>'
+                        }
+                    }
+                },
+                { field: "executionTime", title: app.localize('Time'), sortable: true, width: '18%', formatter: function (value) { return moment(value).format('YYYY-MM-DD HH:mm:ss'); }, align: 'center' },
+                { field: "userName", title: app.localize('UserName'), sortable: true, width: '10%', align: 'center' },
+                { field: "serviceName", title: app.localize('Service'), sortable: true, width: '18%', align: 'center' },
+                {
+                    field: "methodName", title: app.localize('Action'), sortable: true, width: '20%', align: 'center'
+                },
+                { field: "executionDuration", title: app.localize('Duration'), sortable: true, width: '10%', align: 'center', formatter: function (value) { return value + 'ms'; } },
+                { field: "clientIpAddress", title: app.localize('IpAddress'), width: '10%', align: 'center' },
+                { field: "clientName", title: app.localize('Client'), width: '10%', align: 'center' },
+                { field: "browserInfo", title: app.localize('Browser'), width: '15%', align: 'center' }
+        ];
+        var options = {
+            table: "#List",
+            columns: itemsColumns,
+            url: abp.appPath + "api/services/app/auditLog/GetAuditLogs",
+            sortName: "executionTime",
+            sortOrder: "desc",
+            height: SetGridHeightSub(45),//这里注释的话分页栏就不会在最下方
+            //singleSelect: true,//单选模式
+            fitColumns: true
+        }
+        _grid = new abp.grid();
+        _grid.init(options);
+
+        var _selectedDateRange = {
+            startDate: moment().startOf('day'),
+            endDate: moment().endOf('day')
+        };
+        function createRequestParams() {
+            var prms = {};
+            $('#filterForm').serializeArray().map(function (x) { prms[x.name] = x.value; });
+            return $.extend(prms, _selectedDateRange);
+        }
+
+        $("#btnQuery").click(function (e) {
+            e.preventDefault();
+            _grid.loadList(createRequestParams());
+        });
+
+        $('#ExportAuditLogsToExcelButton').click(function (e) {
+            e.preventDefault();
+            console.log(createRequestParams());
+            abp.services.app.auditLog.getAuditLogsToExcel(createRequestParams())//
+                .done(function (result) {
+                    app.downloadTempFile(result);
+                });
+        });
+
+        $('#RefreshAuditLogsButton').click(function (e) {
+            e.preventDefault();
+            _grid.reloadList();
+        });
+
+        $('#filterForm').keydown(function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                _grid.loadList(createRequestParams());
+            }
+        })
+
+        $(".datagridui").on("click", ".btnDetail", function () {
+            var self = $(this);
+            var id = self.attr("data-id");
+            var _createOrEditModal = new app.ModalManager({
+                viewUrl: abp.appPath + 'SystemInfo/AuditLogs/Detail?Id=' + id,
+                modalClass: 'AuditLogDetailModal'
+            });
+            _createOrEditModal.open();
+        })
+    });
+</script>

@@ -1,0 +1,55 @@
+﻿@using Abp.Extensions
+@using Abp.Application.Services.Dto
+@using BM.WMS.Web.Areas.SystemInfo.Models.Common.Modals
+@using BM.WMS.Web.Areas.BaseData.Models.StoreInfoManage
+
+@model CreateOrEditStoreInfoModalViewModel
+
+@* 初始化头部 *@
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? (L("EditStoreInfo") + ": " + Model.StoreInfo.StoreCode) : L("CreateStoreInfo")))
+
+
+<!--html代码区域-->
+<div class="modal-body">
+    <form name="storeInfoInformationsForm" role="form" novalidate class="form-validation">
+        <input type="hidden" name="Id" value="@Model.StoreInfo.Id" />
+
+        <div hidden="hidden">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="Id" value="@Model.StoreInfo.Id" />
+            }
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.StoreInfo.StoreCode.IsNullOrEmpty() ? "" : " edited")" type="text" name="StoreCode" value="@Model.StoreInfo.StoreCode" required />
+            <label>@L("StoreCode")   <span class="required"> * </span>	 	</label>
+        </div>
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.StoreInfo.StoreName.IsNullOrEmpty() ? "" : " edited")" type="text" name="StoreName" value="@Model.StoreInfo.StoreName" required />
+            <label>@L("StoreName")   <span class="required"> * </span>	 	</label>
+        </div>
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.StoreInfo.StoreAddress.IsNullOrEmpty() ? "" : " edited")" type="text" name="StoreAddress" value="@Model.StoreInfo.StoreAddress" />
+            <label>@L("StoreAddress") </label>
+        </div>
+        <div class="form-group form-md-line-input form-md-floating-label">
+            <div class="input-group">
+                <input class="maxlength-handler form-control @(Model.StoreInfo.UserName.IsNullOrEmpty() ? "" : " edited")" type="text" name="UserName" value="@Model.StoreInfo.UserName" required readonly="readonly" />
+                <input type="hidden" name="UserId" value="@Model.StoreInfo.UserId" />
+                <label>@L("StoreManageName")<span class="required"> * </span></label>
+                <span class="input-group-btn">
+                    <button class="btn btn-default" id="btnSelect" type="button"><i class="fa fa-check"></i>@L("Select")</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="form-group form-md-line-input form-md-floating-label  ">
+            <input class="maxlength-handler form-control @(Model.StoreInfo.Remark.IsNullOrEmpty() ? "" : " edited")" type="text" name="Remark" value="@Model.StoreInfo.Remark" />
+            <label>@L("Remark") </label>
+        </div>
+
+    </form>
+</div>
+@Html.Partial("~/Areas/SystemInfo/Views/Common/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+
